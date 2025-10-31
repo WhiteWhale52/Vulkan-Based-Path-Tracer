@@ -34,6 +34,7 @@ public:
 		ImGui::PopStyleVar();
 
 		Render();
+
 	}
 
 	void Render() {
