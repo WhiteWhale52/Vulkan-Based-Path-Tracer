@@ -18,6 +18,9 @@ public:
 		if (ImGui::Button("Render")) {
 			Render();
 		}
+		static float color[3] = { (float)renderer.sphereColor.r, (float)renderer.sphereColor.g,  (float)renderer.sphereColor.b };
+
+		ImGui::ColorPicker3("Sphere Color", color, 1);
 		ImGui::End();
 
 		ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, ImVec2(0.0f, 0.0f));
@@ -25,6 +28,7 @@ public:
 
 		m_ViewportWidth = ImGui::GetContentRegionAvail().x;
 		m_ViewportHeight = ImGui::GetContentRegionAvail().y;
+		
 
 		auto image = renderer.GetFinalImage();
 		if (image)
