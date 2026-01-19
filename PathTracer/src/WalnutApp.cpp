@@ -5,6 +5,7 @@
 #include "Walnut/Timer.h"
 #include "Renderer.h"
 #include "Camera.h"
+#include <glm/gtc/type_ptr.hpp>
 
 
 using namespace Walnut;
@@ -12,7 +13,25 @@ using namespace Walnut;
 class ExampleLayer : public Walnut::Layer
 {
 public:
-	ExampleLayer() : camera(45.0f, 0.1f, 100.0f) {}
+	ExampleLayer() : camera(45.0f, 0.1f, 100.0f) {
+	
+		
+		{
+			Sphere sphere;
+			sphere.position = { 1.0f,0.0f,0.0f };
+			sphere.albedo = { 0.2f,0.3f,1.0f };
+			sphere.radius = 2.0f;
+			scene.spheres.push_back(sphere);
+		}
+
+		{
+			Sphere sphere;
+			sphere.position = { 1.0f,1.0f,0.0f };
+			sphere.albedo = { 0.1f,0.8f,0.0f };
+			sphere.radius = 2.0f;
+			scene.spheres.push_back(sphere);
+		}
+	}
 	
 	virtual void OnUIRender() override
 	{
@@ -21,10 +40,25 @@ public:
 		if (ImGui::Button("Render")) {
 			Render();
 		}
-		static float color[3] = { (float)renderer.sphereColor.r, (float)renderer.sphereColor.g,  (float)renderer.sphereColor.b };
-
-		ImGui::ColorPicker3("Sphere Color", color, 1);
 		ImGui::End();
+		ImGui::Begin("Scene");
+		for (size_t i = 0; i < scene.spheres.size(); i++)
+		{
+			ImGui::PushID(i);
+			Sphere& sphere = scene.spheres[i];
+			ImGui::DragFloat3("POSITION", glm::value_ptr(sphere.position), 0.1f);
+			ImGui::DragFloat("RADIUS", &sphere.radius, 0.1f);
+			ImGui::ColorEdit3("SPHERE COLOR", glm::value_ptr(sphere.albedo));
+			ImGui::Separator();
+			ImGui::PopID();
+		}
+		
+		ImGui::End();
+
+		//static float color[3] = { (float)renderer.sphereColor.r, (float)renderer.sphereColor.g,  (float)renderer.sphereColor.b };
+
+		/*ImGui::ColorPicker3("Sphere Color", color, 1);
+		ImGui::End();*/
 
 		ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, ImVec2(0.0f, 0.0f));
 		ImGui::Begin("ViewPort");
@@ -53,7 +87,7 @@ public:
 
 		renderer.OnResize(m_ViewportWidth, m_ViewportHeight);
 		camera.OnResize(m_ViewportWidth, m_ViewportHeight);
-		renderer.Render(camera);
+		renderer.Render(scene, camera);
 
 		m_LastRenderTime = timer.ElapsedMillis();
 	}
@@ -67,6 +101,8 @@ private:
 	uint32_t* m_ImageData = nullptr;
 
 	float m_LastRenderTime = 0.0f;
+
+	Scene scene;
 
 };
 

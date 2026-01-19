@@ -9,9 +9,9 @@ namespace Utilities {
 		uint8_t a = (uint8_t)(color.a * 255.0f);
 		return outColor
 			| (a << 24)
-			| (r << 16)
+			| (b << 16)
 			| (g << 8)
-			| b;
+			| r;
 
 	}
 }
@@ -35,7 +35,7 @@ void Renderer::OnResize(uint32_t width, uint32_t height) {
 	m_ImageData = new uint32_t[width * height];
 }
 
-void Renderer::Render(const Camera& camera) {
+void Renderer::Render(const Scene& scene, const Camera& camera) {
 	//std::for_each()
 	const glm::vec3& rayOrigin = camera.GetPosition(); 
 	Ray ray;
@@ -45,7 +45,7 @@ void Renderer::Render(const Camera& camera) {
 		for (uint32_t x = 0; x < m_FinalImage->GetWidth(); x++) {
  
 			ray.Direction = camera.GetRayDirections()[x + y * m_FinalImage->GetWidth()];
-			glm::vec4 color = TraceRay(ray);
+			glm::vec4 color = TraceRay(scene, ray);
 
 			color = glm::clamp(color, glm::vec4(0.0f), glm::vec4(1.0f));
 
@@ -60,44 +60,47 @@ void Renderer::Render(const Camera& camera) {
 
 }
 
-glm::vec4 Renderer::TraceRay(const Ray& ray)
+glm::vec4 Renderer::TraceRay(const Scene& scene, const Ray& ray)
 {
-	
-	//glm::vec3 sphereColor(1.0f, 0.0f, 1.0f);
-
 	glm::vec3 lightDir(-2.0f, -1.0f, -2.0f);
 	lightDir = glm::normalize(lightDir);
 
-	float radius = 0.5f;
+	if (scene.spheres.size() == 0) return glm::vec4(0, 0, 0, 1);
 
+	const Sphere* closestSphere = nullptr;
+	float hitTval = FLT_MAX;
+	for (const Sphere& sphere : scene.spheres)
+	{
+		glm::vec3 origin = ray.Origin - sphere.position;
 
+		float a = glm::dot(ray.Direction, ray.Direction);
+		float b = 2.0f * glm::dot(origin, ray.Direction);
+		float c = glm::dot(origin, origin) - sphere.radius * sphere.radius;
 
+		float discriminant = b * b - 4.0f * a * c;
 
-	float a = glm::dot(ray.Direction, ray.Direction);
-	float b = 2.0f * glm::dot(ray.Origin, ray.Direction);
-	float c = glm::dot(ray.Origin, ray.Origin) - radius * radius;
-
-	float discriminant = b * b - 4.0f * a * c;
-
-	if (discriminant >= 0.0f) {
-		/*{
-			float t_0 = (-b + glm::sqrt(discriminant)) / (2.0f * a);
-			glm::vec3 hitPos = t_0 * rayDir + rayOrigin;
-			glm::vec3 normal = hitPos - glm::vec3(0.0f);
-
-			return glm::vec4(sphereColor, 1) * glm::dot(-lightOrigin, normal);
-		}*/
-			
-		{
-			float t_0 = (-b - glm::sqrt(discriminant)) / (2.0f * a);
-			glm::vec3 hitPos = t_0 * ray.Direction + ray.Origin;
-			glm::vec3 normal = hitPos - glm::vec3(0.0f);
-
-			float d = glm::max(glm::dot(-lightDir, glm::normalize(normal)), 0.0f);
-
-			return glm::vec4(sphereColor, 1) * d;
+		if (discriminant < 0.0f) {
+			continue;
 		}
- 	}
 
-	return glm::vec4(0,0,0,1);
+		float t_0 = (-b - glm::sqrt(discriminant)) / (2.0f * a);
+		if (t_0 < hitTval) {
+			hitTval = t_0; 
+			closestSphere = &sphere;
+		}//glm::vec3 sphereColor(1.0f, 0.0f, 1.0f);
+	}
+
+	if (closestSphere == nullptr) return glm::vec4(0.0f,0.0f,0.0f,1.0f);
+
+	glm::vec3 origin = ray.Origin - closestSphere->position; 
+
+	glm::vec3 hitPos = hitTval * ray.Direction + origin;
+	glm::vec3 normal = glm::normalize(hitPos);
+
+	float lightIntensity = glm::max(glm::dot(-lightDir, glm::normalize(normal)), 0.0f);
+	glm::vec3 sphereColor = closestSphere->albedo;
+	sphereColor *= lightIntensity;
+	return glm::vec4(sphereColor, 1.0f);
+
 }
+
