@@ -46,7 +46,7 @@ void Renderer::Render(const Scene& scene, const Camera& camera) {
 	for (uint32_t y = 0; y < m_FinalImage->GetHeight(); y++)
 	{
 		for (uint32_t x = 0; x < m_FinalImage->GetWidth(); x++) {
- 
+			RayGeneration();
 			ray.Direction = camera.GetRayDirections()[x + y * m_FinalImage->GetWidth()];
 			glm::vec4 color = TraceRay(scene, ray);
 
