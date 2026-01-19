@@ -19,6 +19,7 @@ namespace Utilities {
 
 void Renderer::OnResize(uint32_t width, uint32_t height) {
 
+
 	if (m_FinalImage) {
 
 		// There was no need for any resizes
@@ -37,6 +38,8 @@ void Renderer::OnResize(uint32_t width, uint32_t height) {
 
 void Renderer::Render(const Scene& scene, const Camera& camera) {
 	//std::for_each()
+	activeCamera = &camera;
+	activeScene = &scene;
 	const glm::vec3& rayOrigin = camera.GetPosition(); 
 	Ray ray;
 	ray.Origin = camera.GetPosition();
@@ -60,7 +63,7 @@ void Renderer::Render(const Scene& scene, const Camera& camera) {
 
 }
 
-glm::vec4 Renderer::TraceRay(const Scene& scene, const Ray& ray)
+glm::vec4 Renderer::TraceRay(const Ray& ray)
 {
 	glm::vec3 lightDir(-2.0f, -1.0f, -2.0f);
 	lightDir = glm::normalize(lightDir);
@@ -102,5 +105,20 @@ glm::vec4 Renderer::TraceRay(const Scene& scene, const Ray& ray)
 	sphereColor *= lightIntensity;
 	return glm::vec4(sphereColor, 1.0f);
 
+}
+
+Renderer::HitPayload Renderer::ClosestHit(const Ray& ray, float hitTVal, uint32_t objectIndex)
+{
+	return HitPayload();
+}
+
+Renderer::HitPayload Renderer::Miss(const Ray& ray)
+{
+	return HitPayload();
+}
+
+glm::vec4 Renderer::RayGeneration()
+{
+	return glm::vec4();
 }
 

@@ -21,8 +21,22 @@ public:
 
 
 private:
-	glm::vec4 TraceRay(const Scene& scene, const Ray& ray);
+
+	struct HitPayload {
+		float hitTValue;
+		glm::vec3 worldNormal;
+		glm::vec3 worldPos;
+
+		uint32_t ObjectIndex;
+	};
+
+	HitPayload TraceRay(const Ray& ray);
+	HitPayload ClosestHit(const Ray& ray, float hitTVal, uint32_t objectIndex);
+	HitPayload Miss(const Ray& ray);
 	std::shared_ptr<Walnut::Image> m_FinalImage;
 	uint32_t* m_ImageData = nullptr; 
-	
+	glm::vec4 RayGeneration();
+
+	const Scene* activeScene = nullptr;
+	const Camera* activeCamera = nullptr;
 };
