@@ -31,11 +31,12 @@ private:
 	};
 
 	HitPayload TraceRay(const Ray& ray);
-	HitPayload ClosestHit(const Ray& ray, float hitTVal, uint32_t objectIndex);
+	HitPayload ClosestHit(const Ray& ray, float hitTVal, int objectIndex);
 	HitPayload Miss(const Ray& ray);
+
 	std::shared_ptr<Walnut::Image> m_FinalImage;
 	uint32_t* m_ImageData = nullptr; 
-	glm::vec4 RayGeneration();
+	glm::vec4 RayGeneration(uint32_t x, uint32_t y);
 
 	const Scene* activeScene = nullptr;
 	const Camera* activeCamera = nullptr;
