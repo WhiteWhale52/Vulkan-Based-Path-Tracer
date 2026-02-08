@@ -31,6 +31,21 @@ public:
 			sphere.radius = 2.0f;
 			scene.spheres.push_back(sphere);
 		}
+		{
+			Light light;
+			light.lightColor = glm::vec3{ 1.0f };
+			light.lightDirection = glm::vec3(-2.0f, -1.0f, -2.0f);
+			light.intensity = 0.3f;
+			scene.lights.push_back(light);
+		}
+
+		{
+			Light light;
+			light.lightColor = glm::vec3{ 0.1f };
+			light.lightDirection = glm::vec3(2.0f, -1.0f, -2.0f);
+			light.intensity = 0.3f;
+			scene.lights.push_back(light);
+		}
 	}
 	
 	virtual void OnUIRender() override
@@ -52,13 +67,20 @@ public:
 			ImGui::Separator();
 			ImGui::PopID();
 		}
+		for (size_t j = 0; j < scene.lights.size(); j++)
+		{
+			ImGui::PushID((int)j +1000);
+			Light& light = scene.lights[j];
+			ImGui::DragFloat3("Light Direction", glm::value_ptr(light.lightDirection), 0.1f);
+			ImGui::ColorEdit3("Light Color", glm::value_ptr(light.lightColor));
+			ImGui::DragFloat("Light Intensity", &light.intensity, 0.1f);
+			ImGui::Separator();
+			ImGui::PopID();
+		}
+
 		
 		ImGui::End();
 
-		//static float color[3] = { (float)renderer.sphereColor.r, (float)renderer.sphereColor.g,  (float)renderer.sphereColor.b };
-
-		/*ImGui::ColorPicker3("Sphere Color", color, 1);
-		ImGui::End();*/
 
 		ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, ImVec2(0.0f, 0.0f));
 		ImGui::Begin("ViewPort");
