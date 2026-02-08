@@ -77,20 +77,28 @@ glm::vec4 Renderer::RayGeneration(uint32_t x, uint32_t y)
 			finalColor += skyColor * multiplier;
 			break;
 		}
-
-		glm::vec3 lightDir(-2.0f, -1.0f, -2.0f);
-		lightDir = glm::normalize(lightDir);
-		float lightIntensity = glm::max(glm::dot(-lightDir, glm::normalize(payload.worldNormal)), 0.0f);
-
-		const Sphere& sphere = activeScene->spheres[payload.ObjectIndex]; 
-
+		
+		const Sphere& sphere = activeScene->spheres[payload.ObjectIndex];
 		glm::vec3 sphereColor = sphere.albedo;
-		sphereColor *= lightIntensity;
+		glm::vec3 lighting(0.0f);
+		for (const auto& light : activeScene->lights)
+		{
+			if (light.lightColor == glm::vec3(0.0f)) continue;
+			glm::vec3 lightDir = glm::normalize(-light.lightDirection);
+			float NdotL = glm::max(glm::dot(payload.worldNormal, lightDir), 0.0f);
+			lighting += sphere.albedo * light.lightColor * light.intensity * NdotL;
+		}
+		if (lighting == glm::vec3(0.0f))
+		{
+			finalColor += glm::vec3(0.0f);
+			break;
+		}
+
+		sphereColor = lighting;
 		finalColor += sphereColor * multiplier;
 		multiplier *= 0.5f;
 		ray.Origin = payload.worldPos - 0.001f * payload.worldNormal;
-		ray.Direction  = glm::reflect(ray.Direction, payload.worldNormal);
-
+		ray.Direction = glm::normalize(glm::reflect(ray.Direction, payload.worldNormal));
 	}
 	return glm::vec4(finalColor, 1.0f);
 }
