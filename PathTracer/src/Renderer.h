@@ -5,6 +5,7 @@
 #include "Walnut/Random.h"
 #include "Camera.h"
 #include "Ray.h"
+#include <execution>
 #include "Scene.h"
 
 
@@ -13,7 +14,7 @@ class Renderer {
 public:
 
 	struct Settings {
-		bool Accumulate = false;
+		bool Accumulate = true;
 	};
 	Renderer() = default;
 	
@@ -44,6 +45,8 @@ private:
 
 	std::shared_ptr<Walnut::Image> finalImage;
 	glm::vec4 RayGeneration(uint32_t x, uint32_t y);
+
+	std::vector<uint32_t> imageHorizontalIterator, imageVerticalIterator;
 
 	const Scene* activeScene = nullptr;
 	const Camera* activeCamera = nullptr;

@@ -27,6 +27,7 @@ void Renderer::OnResize(uint32_t width, uint32_t height) {
 			return;
 
 		finalImage->Resize(width, height);
+		
 	}
 	else {
 		finalImage = std::make_shared<Walnut::Image>(width, height, Walnut::ImageFormat::RGBA);
@@ -37,6 +38,18 @@ void Renderer::OnResize(uint32_t width, uint32_t height) {
 
 	delete[] accumulationData;
 	accumulationData = new glm::vec4[width * height];
+
+	imageHorizontalIterator.resize(width);
+	imageVerticalIterator.resize(height);
+
+	for (uint32_t i = 0; i < width; i++)
+	{
+		imageHorizontalIterator[i] = i;
+	}
+	for (uint32_t i = 0; i < height; i++)
+	{
+		imageVerticalIterator[i] = i;
+	}
 }
 
 void Renderer::Render(const Scene& scene, const Camera& camera) {
@@ -47,6 +60,24 @@ void Renderer::Render(const Scene& scene, const Camera& camera) {
 	if (frameIndex == 1)
 		memset(accumulationData, 0, finalImage->GetHeight() * finalImage->GetWidth() * sizeof(glm::vec4));
 
+#define M_T 1
+#if M_T 1
+	std::for_each(std::execution::par, imageVerticalIterator.begin(), imageVerticalIterator.end(),
+		[this](uint32_t y) {
+			std::for_each(std::execution::par, imageHorizontalIterator.begin(), imageHorizontalIterator.end(),
+				[this, y](uint32_t x) {
+					glm::vec4 color = RayGeneration(x, y);
+
+					accumulationData[x + y * finalImage->GetWidth()] += color;
+
+					glm::vec4 accumulatedColor = accumulationData[x + y * finalImage->GetWidth()];
+					accumulatedColor /= (float)frameIndex;
+					accumulatedColor = glm::clamp(accumulatedColor, glm::vec4(0.0f), glm::vec4(1.0f));
+
+					m_ImageData[x + finalImage->GetWidth() * y] = Utilities::ConvertToRGBA(accumulatedColor);
+				});
+		});
+#else
 	for (uint32_t y = 0; y < finalImage->GetHeight(); y++)
 	{
 		for (uint32_t x = 0; x < finalImage->GetWidth(); x++) {
@@ -63,7 +94,7 @@ void Renderer::Render(const Scene& scene, const Camera& camera) {
 
 		}
 	}
-
+#endif
 
 	finalImage->SetData(m_ImageData);
 
