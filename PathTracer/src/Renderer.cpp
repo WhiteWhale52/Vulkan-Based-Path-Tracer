@@ -67,38 +67,33 @@ glm::vec4 Renderer::RayGeneration(uint32_t x, uint32_t y)
 	
 	glm::vec3 finalColor(0.0f);
 
-	int bounces = 2; 
+	int bounces =5; 
 	float multiplier = 1.0f;
 	for (int i = 0; i < bounces; i++)
 	{
 		Renderer::HitPayload payload =  TraceRay(ray); 
 		if (payload.hitTValue < 0.0f) {
-			glm::vec3 skyColor = glm::vec3(0.0f, 0.0f, 0.0f);
+			glm::vec3 skyColor = glm::vec3(0.6f, 0.7f, 0.9f);
 			finalColor += skyColor * multiplier;
 			break;
 		}
 		
 		const Sphere& sphere = activeScene->spheres[payload.ObjectIndex];
-		glm::vec3 sphereColor = sphere.albedo;
 		glm::vec3 lighting(0.0f);
 		for (const auto& light : activeScene->lights)
 		{
 			if (light.lightColor == glm::vec3(0.0f)) continue;
 			glm::vec3 lightDir = glm::normalize(-light.lightDirection);
 			float NdotL = glm::max(glm::dot(payload.worldNormal, lightDir), 0.0f);
-			lighting += sphere.albedo * light.lightColor * light.intensity * NdotL;
+			lighting += sphere.material.albedo * light.lightColor * light.intensity * NdotL;
 		}
-		if (lighting == glm::vec3(0.0f))
-		{
-			finalColor += glm::vec3(0.0f);
-			break;
-		}
+		finalColor += lighting * multiplier;
+		multiplier *= 0.7f;
+		ray.Origin = payload.worldPos + 0.001f * payload.worldNormal;
+		ray.Direction = glm::normalize(glm::reflect(ray.Direction,
+			payload.worldNormal + sphere.material.roughness * Walnut::Random::Vec3(-0.5f, 0.5f)));
 
-		sphereColor = lighting;
-		finalColor += sphereColor * multiplier;
-		multiplier *= 0.5f;
-		ray.Origin = payload.worldPos - 0.001f * payload.worldNormal;
-		ray.Direction = glm::normalize(glm::reflect(ray.Direction, payload.worldNormal));
+	
 	}
 	return glm::vec4(finalColor, 1.0f);
 }

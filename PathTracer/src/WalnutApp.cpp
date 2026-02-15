@@ -18,34 +18,34 @@ public:
 		
 		{
 			Sphere sphere;
-			sphere.position = { 1.0f,0.0f,0.0f };
-			sphere.albedo = { 0.2f,0.3f,1.0f };
+			sphere.position = { 1.0f,0.0f,-5.3f };
+			sphere.material.albedo = { 0.2f,0.3f,1.0f };
 			sphere.radius = 2.0f;
 			scene.spheres.push_back(sphere);
 		}
 
 		{
 			Sphere sphere;
-			sphere.position = { 1.0f,1.0f,0.0f };
-			sphere.albedo = { 0.1f,0.8f,0.0f };
-			sphere.radius = 2.0f;
+			sphere.position = { 1.0f,-51.0f,0.0f };
+			sphere.material.albedo = { 0.1f,0.8f,0.0f };
+			sphere.radius = 49.0f;
 			scene.spheres.push_back(sphere);
 		}
 		{
 			Light light;
 			light.lightColor = glm::vec3{ 1.0f };
 			light.lightDirection = glm::vec3(-2.0f, -1.0f, -2.0f);
-			light.intensity = 0.3f;
+			light.intensity = 1.3f;
 			scene.lights.push_back(light);
 		}
 
-		{
+	/*	{
 			Light light;
 			light.lightColor = glm::vec3{ 0.1f };
 			light.lightDirection = glm::vec3(2.0f, -1.0f, -2.0f);
 			light.intensity = 0.3f;
 			scene.lights.push_back(light);
-		}
+		}*/
 	}
 	
 	virtual void OnUIRender() override
@@ -63,7 +63,9 @@ public:
 			Sphere& sphere = scene.spheres[i];
 			ImGui::DragFloat3("POSITION", glm::value_ptr(sphere.position), 0.1f);
 			ImGui::DragFloat("RADIUS", &sphere.radius, 0.1f);
-			ImGui::ColorEdit3("SPHERE COLOR", glm::value_ptr(sphere.albedo));
+			ImGui::DragFloat("METALLIC", &sphere.material.metallic, 0.1f);
+			ImGui::DragFloat("ROUGHNESS", &sphere.material.roughness , 0.1f);
+			ImGui::ColorEdit3("SPHERE COLOR", glm::value_ptr(sphere.material.albedo));
 			ImGui::Separator();
 			ImGui::PopID();
 		}
