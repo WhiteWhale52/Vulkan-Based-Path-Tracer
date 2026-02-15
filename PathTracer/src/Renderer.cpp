@@ -79,19 +79,20 @@ glm::vec4 Renderer::RayGeneration(uint32_t x, uint32_t y)
 		}
 		
 		const Sphere& sphere = activeScene->spheres[payload.ObjectIndex];
+		const Material& material = activeScene->materials[sphere.materialIndex];
 		glm::vec3 lighting(0.0f);
 		for (const auto& light : activeScene->lights)
 		{
 			if (light.lightColor == glm::vec3(0.0f)) continue;
 			glm::vec3 lightDir = glm::normalize(-light.lightDirection);
 			float NdotL = glm::max(glm::dot(payload.worldNormal, lightDir), 0.0f);
-			lighting += sphere.material.albedo * light.lightColor * light.intensity * NdotL;
+			lighting +=  material.albedo * light.lightColor * light.intensity * NdotL;
 		}
 		finalColor += lighting * multiplier;
 		multiplier *= 0.7f;
 		ray.Origin = payload.worldPos + 0.001f * payload.worldNormal;
 		ray.Direction = glm::normalize(glm::reflect(ray.Direction,
-			payload.worldNormal + sphere.material.roughness * Walnut::Random::Vec3(-0.5f, 0.5f)));
+			payload.worldNormal + material.roughness * Walnut::Random::Vec3(-0.5f, 0.5f)));
 
 	
 	}
@@ -106,7 +107,7 @@ Renderer::HitPayload Renderer::TraceRay(const Ray& ray)
 	int closestSphere = -1;
 	float hitTval = FLT_MAX;
 
-	for ( size_t i=0; i< activeScene->spheres.size(); i++ )
+	for (int i=0; i< activeScene->spheres.size(); i++ )
 	{
 		const Sphere& sphere = activeScene->spheres[i];
 		glm::vec3 origin = ray.Origin - sphere.position;
