@@ -63,6 +63,12 @@ public:
 		if (ImGui::Button("Render")) {
 			Render();
 		}
+
+		ImGui::Checkbox("Accumulate", &renderer.GetSettings().Accumulate);
+
+		if (ImGui::Button("Reset")) {
+			renderer.ResetFrameIndex();
+		}
 		ImGui::End();
 		ImGui::Begin("Scene");
 		for (int i = 0; i < scene.spheres.size(); i++)
@@ -123,7 +129,9 @@ public:
 	}
 
 	virtual void OnUpdate(float timeStep) override{
-		camera.OnUpdate(timeStep); 
+		if (camera.OnUpdate(timeStep))
+			renderer.ResetFrameIndex();
+
 	}
 
 	void Render() {

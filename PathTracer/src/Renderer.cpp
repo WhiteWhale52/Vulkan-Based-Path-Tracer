@@ -20,20 +20,23 @@ namespace Utilities {
 void Renderer::OnResize(uint32_t width, uint32_t height) {
 
 
-	if (m_FinalImage) {
+	if (finalImage) {
 
 		// There was no need for any resizes
-		if (m_FinalImage -> GetHeight() == height && m_FinalImage -> GetWidth() == width) 
+		if (finalImage -> GetHeight() == height && finalImage -> GetWidth() == width) 
 			return;
 
-		m_FinalImage->Resize(width, height);
+		finalImage->Resize(width, height);
 	}
 	else {
-		m_FinalImage = std::make_shared<Walnut::Image>(width, height, Walnut::ImageFormat::RGBA);
+		finalImage = std::make_shared<Walnut::Image>(width, height, Walnut::ImageFormat::RGBA);
 	}
 
 	delete[] m_ImageData;
 	m_ImageData = new uint32_t[width * height];
+
+	delete[] accumulationData;
+	accumulationData = new glm::vec4[width * height];
 }
 
 void Renderer::Render(const Scene& scene, const Camera& camera) {
@@ -41,21 +44,31 @@ void Renderer::Render(const Scene& scene, const Camera& camera) {
 	activeCamera = &camera;
 	activeScene = &scene;
 	const glm::vec3& rayOrigin = camera.GetPosition(); 
-	
-	for (uint32_t y = 0; y < m_FinalImage->GetHeight(); y++)
+	if (frameIndex == 1)
+		memset(accumulationData, 0, finalImage->GetHeight() * finalImage->GetWidth() * sizeof(glm::vec4));
+
+	for (uint32_t y = 0; y < finalImage->GetHeight(); y++)
 	{
-		for (uint32_t x = 0; x < m_FinalImage->GetWidth(); x++) {
+		for (uint32_t x = 0; x < finalImage->GetWidth(); x++) {
+
 			glm::vec4 color = RayGeneration(x, y);
 
-			color = glm::clamp(color, glm::vec4(0.0f), glm::vec4(1.0f));
+			accumulationData[x + y * finalImage->GetWidth()] += color;
 
-			m_ImageData[x + m_FinalImage->GetWidth() * y] = Utilities::ConvertToRGBA(color);
+			glm::vec4 accumulatedColor = accumulationData[x + y * finalImage->GetWidth()];
+			accumulatedColor /= (float)frameIndex;
+			accumulatedColor = glm::clamp(accumulatedColor, glm::vec4(0.0f), glm::vec4(1.0f));
+
+			m_ImageData[x + finalImage->GetWidth() * y] = Utilities::ConvertToRGBA(accumulatedColor);
 
 		}
 	}
 
 
-	m_FinalImage->SetData(m_ImageData);
+	finalImage->SetData(m_ImageData);
+
+	if (settings.Accumulate) frameIndex++;
+	else frameIndex = 1;
 	 
 
 }
@@ -63,7 +76,7 @@ glm::vec4 Renderer::RayGeneration(uint32_t x, uint32_t y)
 {
 	Ray ray;
 	ray.Origin = activeCamera->GetPosition();
-	ray.Direction = activeCamera->GetRayDirections()[x + y * m_FinalImage->GetWidth()];
+	ray.Direction = activeCamera->GetRayDirections()[x + y * finalImage->GetWidth()];
 	
 	glm::vec3 finalColor(0.0f);
 
