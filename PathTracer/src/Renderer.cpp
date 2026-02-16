@@ -14,6 +14,26 @@ namespace Utilities {
 			| r;
 
 	}
+
+	static uint32_t PCG_Hash(uint32_t input) {
+		uint32_t state = input * 747796405u + 2891336453u;
+		uint32_t word = ((state >> ((state >> 28u) + 4u)) ^ state) * 277803737u;
+		return (word >> 22u) ^ word;
+	}
+
+	static float RandomFloat(uint32_t& seed) {
+		seed = PCG_Hash(seed);
+		return	(float)seed / (float)std::numeric_limits<uint32_t>::max();
+	}
+
+	static glm::vec3 InUnitSphere(uint32_t& seed) {
+		return glm::normalize(glm::vec3(
+			RandomFloat(seed) * 2.0f - 1.0f,
+			RandomFloat(seed) * 2.0f - 1.0f,
+			RandomFloat(seed) * 2.0f - 1.0f
+		));
+	}
+
 }
 
 
@@ -112,13 +132,17 @@ glm::vec4 Renderer::RayGeneration(uint32_t x, uint32_t y)
 	glm::vec3 finalColor(0.0f);
 
 	int bounces =5; 
-	float multiplier = 1.0f;
+	glm::vec3 contributions = glm::vec3(0.8f,1.0f,0.8f);
+
+	uint32_t seed = x + y * finalImage->GetWidth();
+	seed *= frameIndex;
 	for (int i = 0; i < bounces; i++)
 	{
+		seed += i;
 		Renderer::HitPayload payload =  TraceRay(ray); 
 		if (payload.hitTValue < 0.0f) {
 			glm::vec3 skyColor = glm::vec3(0.6f, 0.7f, 0.9f);
-			finalColor += skyColor * multiplier;
+			//finalColor += skyColor * contributions;
 			break;
 		}
 		
@@ -132,11 +156,13 @@ glm::vec4 Renderer::RayGeneration(uint32_t x, uint32_t y)
 			float NdotL = glm::max(glm::dot(payload.worldNormal, lightDir), 0.0f);
 			lighting +=  material.albedo * light.lightColor * light.intensity * NdotL;
 		}
-		finalColor += lighting * multiplier;
-		multiplier *= 0.7f;
+		//finalColor += lighting * contributions;
+		contributions  *= material.albedo;
+		finalColor += material.GetEmission() * contributions ;
 		ray.Origin = payload.worldPos + 0.001f * payload.worldNormal;
-		ray.Direction = glm::normalize(glm::reflect(ray.Direction,
-			payload.worldNormal + material.roughness * Walnut::Random::Vec3(-0.5f, 0.5f)));
+		/*ray.Direction = glm::normalize(glm::reflect(ray.Direction,
+			payload.worldNormal + material.roughness * 0.5f*Walnut::Random::InUnitSphere()));*/
+		ray.Direction = glm::normalize(payload.worldNormal + Utilities::InUnitSphere(seed));
 
 	
 	}
