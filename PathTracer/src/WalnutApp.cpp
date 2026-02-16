@@ -23,6 +23,12 @@ public:
 		blueSphere.albedo = glm::vec3(1.0f, 0.0f, 0.0f);
 		blueSphere.roughness = 0.5f;
 
+		Material& emittingSphere = scene.materials.emplace_back();
+		emittingSphere.albedo = glm::vec3(0.2f, 0.5f, 0.0f);
+		//emittingSphere.roughness = 0.5f;
+		emittingSphere.emissionColor = glm::vec3(1.0f);
+		emittingSphere.emissionPower = 0.3f;
+
 
 		{
 			Sphere sphere;
@@ -40,10 +46,19 @@ public:
 			scene.spheres.push_back(sphere);
 		}
 		{
+			Sphere sphere;
+			sphere.position = { 2.0f,0.0f,0.0f };
+			sphere.materialIndex = 2;
+			sphere.radius = 2.0f;
+			scene.spheres.push_back(sphere);
+		}
+
+
+		{
 			Light light;
 			light.lightColor = glm::vec3{ 1.0f };
 			light.lightDirection = glm::vec3(-2.0f, -1.0f, -2.0f);
-			light.intensity = 1.3f;
+			light.intensity = 0.0f;
 			scene.lights.push_back(light);
 		}
 
@@ -51,7 +66,7 @@ public:
 			Light light;
 			light.lightColor = glm::vec3{ 0.1f };
 			light.lightDirection = glm::vec3(2.0f, -1.0f, -2.0f);
-			light.intensity = 0.3f;
+			light.intensity = 0.0f;
 			scene.lights.push_back(light);
 		}
 	}
@@ -91,6 +106,8 @@ public:
 			ImGui::DragFloat("METALLIC", &material.metallic, 0.05f, 0.0f, 1.0f);
 			ImGui::DragFloat("ROUGHNESS", &material.roughness, 0.05f, 0.0f, 1.0f);
 			ImGui::ColorEdit3("SPHERE COLOR", glm::value_ptr(material.albedo));
+			ImGui::DragFloat("EMISSION POWER", &material.emissionPower, 0.05f, 0.0f, FLT_MAX);
+			ImGui::ColorEdit3("EMISSION COLOR", glm::value_ptr(material.emissionColor));
 			ImGui::Separator();
 			ImGui::PopID();
 		}
